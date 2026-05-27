@@ -45,7 +45,10 @@ export function TopNav() {
           { label: "Team", href: "/team" },
         ]
       : profile.role === "finance"
-        ? [{ label: "Review", href: "/finance/review" }]
+        ? [
+            { label: "Overview", href: "/finance/overview" },
+            { label: "Review", href: "/finance/review" },
+          ]
         : [{ label: "My Expenses", href: "/expenses" }];
 
   const initials =
