@@ -36,6 +36,7 @@ export default defineSchema({
       v.literal("CAD"),
       v.literal("AUD"),
       v.literal("JPY"),
+      v.literal("PHP"),
     ),
     expenseDate: v.number(),
     merchant: v.optional(v.string()),

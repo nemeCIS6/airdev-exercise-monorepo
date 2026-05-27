@@ -8,6 +8,7 @@ import { ConvexError } from "convex/values";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import type { Currency } from "@/lib/format";
 
 const ALLOWED_MIME = new Set([
   "image/jpeg",
@@ -24,7 +25,7 @@ interface ReceiptUploadProps {
    * so an upload doesn't disturb the user's in-flight local edits. */
   serverParentFields: {
     summary: string;
-    currency: "USD" | "EUR" | "GBP" | "CAD" | "AUD" | "JPY";
+    currency: Currency;
     expenseDate: number;
     merchant?: string;
   };

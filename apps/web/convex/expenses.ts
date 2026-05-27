@@ -24,6 +24,7 @@ const CURRENCY_SYMBOL: Record<Doc<"expenses">["currency"], string> = {
   CAD: "CA$",
   AUD: "A$",
   JPY: "¥",
+  PHP: "₱",
 };
 
 const CATEGORY_VALUES = [
@@ -36,7 +37,15 @@ const CATEGORY_VALUES = [
 ] as const;
 type Category = (typeof CATEGORY_VALUES)[number];
 
-const CURRENCY_VALUES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"] as const;
+const CURRENCY_VALUES = [
+  "USD",
+  "EUR",
+  "GBP",
+  "CAD",
+  "AUD",
+  "JPY",
+  "PHP",
+] as const;
 type Currency = (typeof CURRENCY_VALUES)[number];
 
 const STATUS_VALUES = [
@@ -63,6 +72,7 @@ const currencyValidator = v.union(
   v.literal("CAD"),
   v.literal("AUD"),
   v.literal("JPY"),
+  v.literal("PHP"),
 );
 
 const statusValidator = v.union(

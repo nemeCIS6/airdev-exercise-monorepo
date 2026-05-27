@@ -5,6 +5,7 @@ export const CURRENCY_SYMBOL: Record<string, string> = {
   CAD: "CA$",
   AUD: "A$",
   JPY: "¥",
+  PHP: "₱",
 };
 
 export const CATEGORIES = [
@@ -23,6 +24,7 @@ export const CURRENCIES = [
   "CAD",
   "AUD",
   "JPY",
+  "PHP",
 ] as const;
 
 export type Currency = (typeof CURRENCIES)[number];
