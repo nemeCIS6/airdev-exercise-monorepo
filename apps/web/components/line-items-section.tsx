@@ -270,8 +270,12 @@ export function LineItemsSection({
         })}
       </div>
 
-      <div className="flex items-center justify-between gap-3 px-3 py-3 border-t border-border bg-muted/20">
-        <div className="flex items-center gap-1">
+      {/* Footer: on mobile, total row sits above the action buttons so
+          the running total is the prominent anchor; on sm+ they swap
+          to inline (buttons left, total right) — the canonical desktop
+          spreadsheet feel. */}
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between px-3 py-3 border-t border-border bg-muted/20">
+        <div className="flex items-center gap-1 flex-wrap">
           <Button
             type="button"
             variant="ghost"
@@ -301,7 +305,7 @@ export function LineItemsSection({
             </Button>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
             Total
           </span>
