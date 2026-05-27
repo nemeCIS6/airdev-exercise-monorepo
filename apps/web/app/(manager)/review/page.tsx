@@ -54,10 +54,15 @@ export default function ManagerReviewPage() {
           </p>
         </div>
         {pendingCount > 0 && (
-          <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{pendingCount}</span>{" "}
+          <span
+            title={`${pendingCount} expense${pendingCount === 1 ? "" : "s"} awaiting your manager review`}
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-yellow-500/40 bg-yellow-50/60 px-2 py-1 text-xs font-medium text-yellow-800"
+          >
+            <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-yellow-500/20 px-1 text-[10px] font-bold">
+              {pendingCount}
+            </span>
             awaiting your review
-          </div>
+          </span>
         )}
       </div>
 

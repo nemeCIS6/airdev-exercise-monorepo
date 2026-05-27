@@ -107,31 +107,31 @@ export default function ManagerTeamPage() {
           body="When employees sign up, they'll appear here."
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Display name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="w-[280px]">Manager</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <>
+          {/* Mobile: card list (visible <md). Avatar + name on top,
+              email under it, full-width manager select below. */}
+          <div className="md:hidden rounded-md border border-border overflow-hidden divide-y divide-border">
             {employees.map((emp) => {
               const key = String(emp.userId);
               return (
-                <TableRow key={emp._id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium">
-                        {initials(emp.displayName)}
-                      </span>
-                      <span className="font-medium">{emp.displayName}</span>
+                <div key={emp._id} className="flex flex-col gap-3 p-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-medium">
+                      {initials(emp.displayName)}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">
+                        {emp.displayName}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {emp.email ?? "—"}
+                      </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {emp.email ?? "—"}
-                  </TableCell>
-                  <TableCell>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1">
+                      Manager
+                    </div>
                     <Select
                       value={emp.managerId ?? ""}
                       options={mgrOptions}
@@ -140,12 +140,55 @@ export default function ManagerTeamPage() {
                         onChangeManager(emp.userId, emp.displayName, v)
                       }
                     />
-                  </TableCell>
-                </TableRow>
+                  </div>
+                </div>
               );
             })}
-          </TableBody>
-        </Table>
+          </div>
+
+          {/* Desktop: original table. */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Display name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="w-[280px]">Manager</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {employees.map((emp) => {
+                  const key = String(emp.userId);
+                  return (
+                    <TableRow key={emp._id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium">
+                            {initials(emp.displayName)}
+                          </span>
+                          <span className="font-medium">{emp.displayName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {emp.email ?? "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={emp.managerId ?? ""}
+                          options={mgrOptions}
+                          disabled={pending[key]}
+                          onChange={(v) =>
+                            onChangeManager(emp.userId, emp.displayName, v)
+                          }
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
     </div>
   );

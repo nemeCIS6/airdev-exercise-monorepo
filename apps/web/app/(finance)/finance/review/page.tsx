@@ -54,10 +54,15 @@ export default function FinanceReviewPage() {
           </p>
         </div>
         {pendingCount > 0 && (
-          <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{pendingCount}</span>{" "}
+          <span
+            title={`${pendingCount} expense${pendingCount === 1 ? "" : "s"} awaiting finance sign-off`}
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-blue-400/50 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800"
+          >
+            <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500/20 px-1 text-[10px] font-bold">
+              {pendingCount}
+            </span>
             awaiting your review
-          </div>
+          </span>
         )}
       </div>
 
