@@ -278,6 +278,28 @@ function FinanceDetailInner({ expenseId }: { expenseId: Id<"expenses"> }) {
             </div>
           )}
 
+        {expense.status === "rejected" &&
+          expense.rejectedByRole === "manager" && (
+            <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 text-destructive shrink-0">
+                <XCircle size={16} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-destructive">
+                  Rejected at manager review
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  This expense was rejected before reaching the finance step.
+                </div>
+                {expense.rejectionReason && (
+                  <blockquote className="mt-2 text-sm text-foreground border-l-2 border-destructive/40 pl-3">
+                    {expense.rejectionReason}
+                  </blockquote>
+                )}
+              </div>
+            </div>
+          )}
+
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 mt-6">
           <div className="space-y-6">
             <ExpenseForm

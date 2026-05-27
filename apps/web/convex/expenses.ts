@@ -371,30 +371,20 @@ export const listExpensesForReview = query({
         .filter((e) => e.status !== "draft")
         .sort((a, b) => (b.submittedAt ?? 0) - (a.submittedAt ?? 0));
     } else {
-      // Finance sees everything that has reached their step — currently
-      // queued (pending_finance), already approved by them, or rejected
-      // by them. Manager rejections never hit finance and are excluded.
-      const pendingFinance = await ctx.db
-        .query("expenses")
-        .withIndex("by_status", (q) => q.eq("status", "pending_finance"))
-        .collect();
-      const approved = await ctx.db
-        .query("expenses")
-        .withIndex("by_status", (q) => q.eq("status", "approved"))
-        .collect();
-      const rejected = await ctx.db
-        .query("expenses")
-        .withIndex("by_status", (q) => q.eq("status", "rejected"))
-        .collect();
-      candidates = [
-        ...pendingFinance,
-        ...approved,
-        ...rejected.filter((e) => e.rejectedByRole === "finance"),
-      ].sort(
-        (a, b) =>
-          (b.managerDecidedAt ?? b.submittedAt ?? 0) -
-          (a.managerDecidedAt ?? a.submittedAt ?? 0),
-      );
+      // Finance gets the full audit view: every submitted expense in
+      // the company, regardless of status (except drafts, which stay
+      // private to the submitter). Manager rejections are visible
+      // read-only — they can't act on them, but seeing the full
+      // pipeline supports audit + pattern detection use cases that
+      // a real financial controller would have.
+      const all = await ctx.db.query("expenses").collect();
+      candidates = all
+        .filter((e) => e.status !== "draft")
+        .sort(
+          (a, b) =>
+            (b.managerDecidedAt ?? b.submittedAt ?? 0) -
+            (a.managerDecidedAt ?? a.submittedAt ?? 0),
+        );
     }
 
     const filtered = candidates
