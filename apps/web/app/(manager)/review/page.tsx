@@ -10,6 +10,8 @@ import { EmptyState } from "@/components/empty-state";
 import { ExpenseList, TableSkeleton } from "@/components/expense-list";
 import {
   ExpenseFilters,
+  StatusCountChips,
+  getStatusCounts,
   type FilterState,
 } from "@/components/expense-filters";
 import { dayStringToTs } from "@/lib/format";
@@ -26,6 +28,9 @@ export default function ManagerReviewPage() {
 
   const dateFrom = dayStringToTs(filters.from, false);
   const dateTo = dayStringToTs(filters.to, true);
+  // Unfiltered list for the status-count chips + the "X awaiting"
+  // badge. Stays accurate regardless of the current filter.
+  const all = useQuery(api.expenses.listExpensesForReview, {});
   const expenses = useQuery(api.expenses.listExpensesForReview, {
     statuses: filters.statuses.length ? filters.statuses : undefined,
     dateFrom,
@@ -34,7 +39,7 @@ export default function ManagerReviewPage() {
 
   const goDetail = (id: string) => router.push(`/review/${id}`);
 
-  const pendingCount = (expenses ?? []).filter(
+  const pendingCount = (all ?? []).filter(
     (e) => e.status === "pending_manager",
   ).length;
   const isDefaultFilter =
@@ -63,6 +68,14 @@ export default function ManagerReviewPage() {
             </span>
             awaiting your review
           </span>
+        )}
+      </div>
+
+      <div className="mb-3">
+        {all ? (
+          <StatusCountChips counts={getStatusCounts(all)} />
+        ) : (
+          <div className="skel h-5 w-80" />
         )}
       </div>
 
