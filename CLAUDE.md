@@ -8,7 +8,7 @@ The **Airdev Expense Tracker** technical exercise. A small but production-qualit
 
 This is a monorepo: the Next.js app + Convex backend both live at `apps/web/`.
 
-## Source-of-truth hierarchy
+## Source-of-truth hierarchy 
 
 Read in this order. If two sources conflict, the higher one wins.
 
