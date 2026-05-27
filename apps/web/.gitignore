@@ -8,4 +8,8 @@ build/
 dist/
 *.tsbuildinfo
 .DS_Store
-convex/_generated/
+
+# Note: convex/_generated/ is intentionally committed so Vercel builds
+# (which don't run `npx convex dev`) can resolve `@/convex/_generated/api`.
+# Convex regenerates these files on every `convex dev` / `convex deploy`,
+# so they stay in sync with convex/*.ts.
