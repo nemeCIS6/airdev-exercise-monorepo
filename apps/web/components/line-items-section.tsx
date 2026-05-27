@@ -1,6 +1,11 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
+import { useAction } from "convex/react";
+import { toast } from "sonner";
+import { ConvexError } from "convex/values";
+import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -37,6 +42,11 @@ interface LineItemsSectionProps {
   onChange: (next: LineLocal[]) => void;
   errors?: Record<string, LineErrors>;
   disabled?: boolean;
+  /**
+   * If set, surfaces an "Auto-fill from receipt" button that calls
+   * Gemini OCR on the receipt and appends extracted lines.
+   */
+  receiptStorageId?: Id<"_storage">;
 }
 
 export function makeLine(partial: Partial<LineLocal> = {}): LineLocal {
@@ -59,7 +69,11 @@ export function LineItemsSection({
   onChange,
   errors = {},
   disabled,
+  receiptStorageId,
 }: LineItemsSectionProps) {
+  const extract = useAction(api.ai.extractLinesFromReceipt);
+  const [extracting, setExtracting] = useState(false);
+
   const updateLine = (clientId: string, patch: Partial<LineLocal>) =>
     onChange(
       lines.map((l) => (l.clientId === clientId ? { ...l, ...patch } : l)),
@@ -70,8 +84,48 @@ export function LineItemsSection({
   const removeLine = (clientId: string) =>
     onChange(lines.filter((l) => l.clientId !== clientId));
 
+  const handleAutofill = async () => {
+    if (!receiptStorageId || extracting) return;
+    setExtracting(true);
+    try {
+      const { lines: extracted } = await extract({
+        storageId: receiptStorageId,
+      });
+      if (extracted.length === 0) {
+        toast.info("Couldn't read any line items. Enter them manually.");
+        return;
+      }
+      const newLines = extracted.map((l) =>
+        makeLine({
+          description: l.description,
+          category: l.category,
+          quantity: l.quantity,
+          unitAmount: l.unitAmount,
+        }),
+      );
+      // If the user hasn't touched the starting row, replace it; otherwise append.
+      const onlyHasEmptyStarter =
+        lines.length === 1 &&
+        lines[0].description.trim() === "" &&
+        lines[0].unitAmount === 0;
+      onChange(onlyHasEmptyStarter ? newLines : [...lines, ...newLines]);
+      toast.success(
+        `Added ${newLines.length} ${newLines.length === 1 ? "line" : "lines"} from receipt.`,
+      );
+    } catch (err) {
+      const msg =
+        err instanceof ConvexError
+          ? String(err.data)
+          : "Receipt OCR failed. Enter line items manually.";
+      toast.error(msg);
+    } finally {
+      setExtracting(false);
+    }
+  };
+
   const grandTotal = lines.reduce((s, l) => s + lineTotal(l), 0);
   const canRemove = lines.length > 1;
+  const canAutofill = !disabled && !!receiptStorageId;
 
   return (
     <div className="rounded-md border border-border overflow-hidden">
@@ -202,16 +256,36 @@ export function LineItemsSection({
       </div>
 
       <div className="flex items-center justify-between gap-3 px-3 py-3 border-t border-border bg-muted/20">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={addLine}
-          disabled={disabled}
-          className="text-foreground"
-        >
-          <Plus size={14} /> Add line
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={addLine}
+            disabled={disabled}
+            className="text-foreground"
+          >
+            <Plus size={14} /> Add line
+          </Button>
+          {canAutofill && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleAutofill}
+              disabled={extracting}
+              className="text-foreground"
+              title="Use Gemini Vision to extract line items from your receipt"
+            >
+              {extracting ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Sparkles size={14} />
+              )}{" "}
+              {extracting ? "Reading receipt…" : "Auto-fill from receipt"}
+            </Button>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
             Total

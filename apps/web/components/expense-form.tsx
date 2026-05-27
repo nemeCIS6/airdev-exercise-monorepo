@@ -158,6 +158,7 @@ export function ExpenseForm({
           onChange={(lines) => set({ lines })}
           errors={lineErrors}
           disabled={disabled}
+          receiptStorageId={serverParent.receiptStorageId}
         />
         {errors.lines && (
           <div className="text-xs text-destructive">{errors.lines}</div>

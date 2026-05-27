@@ -396,6 +396,29 @@ export const getExpense = query({
   },
 });
 
+/**
+ * Returns true if the caller owns a draft (or rejected) expense whose
+ * `receiptStorageId` matches the given storage ID. Used by `ai.ts` to gate
+ * Gemini OCR — only the file's owner can ask us to extract text from it.
+ */
+export const callerOwnsDraftWithReceipt = query({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, { storageId }): Promise<boolean> => {
+    const caller = await getCallerProfile(ctx);
+    const matches = await ctx.db
+      .query("expenses")
+      .withIndex("by_employee_and_status", (q) =>
+        q.eq("employeeId", caller.callerId),
+      )
+      .collect();
+    return matches.some(
+      (e) =>
+        e.receiptStorageId === storageId &&
+        (e.status === "draft" || e.status === "rejected"),
+    );
+  },
+});
+
 // ─── Lifecycle mutations ────────────────────────────────────────────────────
 
 export const createDraft = mutation({
