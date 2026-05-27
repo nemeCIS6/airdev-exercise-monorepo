@@ -42,9 +42,12 @@ export function EmployeeActionBar({
         variant="ghost"
         onClick={onDiscard}
         disabled={submitting}
-        className="text-muted-foreground hover:text-destructive"
+        aria-label="Discard draft"
+        title="Discard draft"
+        className="w-9 px-0 sm:w-auto sm:px-3 text-muted-foreground hover:text-destructive"
       >
-        <Trash2 size={14} /> Discard draft
+        <Trash2 size={14} />
+        <span className="hidden sm:inline">Discard draft</span>
       </Button>
     );
     actions = (
@@ -129,7 +132,7 @@ export function EmployeeActionBar({
               </div>
             </div>
             {leftActions && (
-              <div className="flex items-center gap-2 sm:pl-2 sm:border-l sm:border-border sm:ml-1">
+              <div className="flex items-center gap-2 ml-auto sm:ml-1 sm:pl-2 sm:border-l sm:border-border">
                 {leftActions}
               </div>
             )}
