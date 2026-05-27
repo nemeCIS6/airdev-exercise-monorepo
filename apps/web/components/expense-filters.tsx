@@ -51,7 +51,7 @@ export function ExpenseFilters({
           onChange={(v) => update({ statuses: v })}
         />
       )}
-      <div className="flex items-center gap-2">
+      <div className="flex w-full sm:w-auto min-w-0 items-center gap-2">
         <Label className="text-muted-foreground text-xs whitespace-nowrap">
           From
         </Label>
@@ -59,14 +59,14 @@ export function ExpenseFilters({
           type="date"
           value={filters.from || ""}
           onChange={(e) => update({ from: e.target.value })}
-          className="h-9 w-[150px]"
+          className="h-9 min-w-0 flex-1 sm:flex-none sm:w-[150px]"
         />
         <Label className="text-muted-foreground text-xs">To</Label>
         <Input
           type="date"
           value={filters.to || ""}
           onChange={(e) => update({ to: e.target.value })}
-          className="h-9 w-[150px]"
+          className="h-9 min-w-0 flex-1 sm:flex-none sm:w-[150px]"
         />
       </div>
       {!cleared && (

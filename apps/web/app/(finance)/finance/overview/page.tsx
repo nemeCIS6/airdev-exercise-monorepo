@@ -30,6 +30,13 @@ const PERIOD_LABEL: Record<Period, string> = {
   month: "This month",
 };
 
+const PERIOD_LABEL_SHORT: Record<Period, string> = {
+  all: "All",
+  year: "Year",
+  quarter: "Quarter",
+  month: "Month",
+};
+
 function periodStart(period: Period): number {
   if (period === "all") return 0;
   const now = new Date();
@@ -136,13 +143,14 @@ function PeriodSelector({
             aria-selected={active}
             onClick={() => onChange(p)}
             className={
-              "px-3 py-1.5 rounded-[5px] font-medium transition-colors " +
+              "px-2.5 sm:px-3 py-1.5 rounded-[5px] font-medium transition-colors whitespace-nowrap " +
               (active
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground")
             }
           >
-            {PERIOD_LABEL[p]}
+            <span className="sm:hidden">{PERIOD_LABEL_SHORT[p]}</span>
+            <span className="hidden sm:inline">{PERIOD_LABEL[p]}</span>
           </button>
         );
       })}

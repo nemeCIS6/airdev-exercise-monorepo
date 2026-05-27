@@ -175,8 +175,8 @@ function ManagerDetailInner({ expenseId }: { expenseId: Id<"expenses"> }) {
 
         <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
           <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold tracking-tight truncate">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <h1 className="text-2xl font-semibold tracking-tight md:truncate">
                 {expense.summary || (
                   <span className="text-muted-foreground italic">
                     Untitled draft

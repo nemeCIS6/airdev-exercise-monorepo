@@ -62,15 +62,16 @@ export function TopNav() {
 
   return (
     <header className="border-b border-border bg-background sticky top-0 z-30">
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3 sm:gap-6">
         <Link
           href={homeHref}
-          className="flex items-center gap-2 font-semibold tracking-tight"
+          className="flex items-center gap-2 font-semibold tracking-tight shrink-0"
+          aria-label="Expense Tracker home"
         >
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Receipt size={16} />
           </span>
-          <span>Expense Tracker</span>
+          <span className="hidden sm:inline">Expense Tracker</span>
         </Link>
         <nav className="flex items-center gap-1">
           {links.map((l) => {

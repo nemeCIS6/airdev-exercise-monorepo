@@ -60,7 +60,7 @@ export function ApproverActionBar({
 
   return (
     <div className="sticky bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-[0_-4px_16px_-8px_rgba(0,0,0,0.08)]">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {canAct && mode !== "idle" && (
           <div className="py-4 border-b border-border">
             {mode === "approve" && (
@@ -83,7 +83,7 @@ export function ApproverActionBar({
                     onChange={(e) => setApproveNote(e.target.value)}
                   />
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
                   <Button
                     variant="outline"
                     onClick={cancelApprove}
@@ -129,7 +129,7 @@ export function ApproverActionBar({
                     </span>
                   </div>
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
                   <Button
                     variant="outline"
                     onClick={cancelReject}
@@ -150,7 +150,7 @@ export function ApproverActionBar({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 py-3">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3 py-3">
           <div className="flex items-end gap-3 min-w-0">
             <div className="text-2xl font-semibold tabular-nums leading-none">
               {displayAmount}
@@ -159,14 +159,17 @@ export function ApproverActionBar({
               {lineCount} {lineCount === 1 ? "line" : "lines"}
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 ml-auto">
+          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
             {canAct ? (
               <>
                 <Button
                   variant="destructive"
                   onClick={() => setMode("reject")}
                   disabled={submitting || mode === "reject"}
-                  className={mode === "reject" ? "ring-2 ring-ring" : ""}
+                  className={
+                    "flex-1 sm:flex-none" +
+                    (mode === "reject" ? " ring-2 ring-ring" : "")
+                  }
                 >
                   <X size={14} /> Reject
                 </Button>
@@ -174,7 +177,10 @@ export function ApproverActionBar({
                   variant="success"
                   onClick={() => setMode("approve")}
                   disabled={submitting || mode === "approve"}
-                  className={mode === "approve" ? "ring-2 ring-ring" : ""}
+                  className={
+                    "flex-1 sm:flex-none" +
+                    (mode === "approve" ? " ring-2 ring-ring" : "")
+                  }
                 >
                   <Check size={14} /> {approveLabel}
                 </Button>

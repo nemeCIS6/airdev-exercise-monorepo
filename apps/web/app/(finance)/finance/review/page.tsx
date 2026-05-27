@@ -45,7 +45,7 @@ export default function FinanceReviewPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
-      <div className="flex items-end justify-between gap-4 mb-6">
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 mb-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Review</h1>
           <p className="mt-1 text-sm text-muted-foreground">

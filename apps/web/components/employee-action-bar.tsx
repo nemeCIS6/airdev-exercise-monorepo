@@ -110,9 +110,11 @@ export function EmployeeActionBar({
 
   return (
     <div className="sticky bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-[0_-4px_16px_-8px_rgba(0,0,0,0.08)]">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 py-3">
-          <div className="flex items-center gap-4 min-w-0">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3 py-3">
+          {/* Total + secondary leftActions (Discard, etc.). On mobile,
+              stacks above the primary actions; on sm+, sits at left. */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 min-w-0">
             <div className="flex items-end gap-3 min-w-0">
               <div className="text-2xl font-semibold tabular-nums leading-none">
                 {displayAmount}
@@ -127,12 +129,13 @@ export function EmployeeActionBar({
               </div>
             </div>
             {leftActions && (
-              <div className="flex items-center gap-2 pl-2 border-l border-border ml-1">
+              <div className="flex items-center gap-2 sm:pl-2 sm:border-l sm:border-border sm:ml-1">
                 {leftActions}
               </div>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-2 ml-auto">
+          {/* Primary actions. Full-width buttons on mobile, inline on sm+. */}
+          <div className="flex flex-wrap items-center gap-2 sm:ml-auto [&>button]:flex-1 sm:[&>button]:flex-none">
             {hint}
             {actions}
           </div>
