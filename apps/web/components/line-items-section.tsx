@@ -127,6 +127,12 @@ export function LineItemsSection({
   const canRemove = lines.length > 1;
   const canAutofill = !disabled && !!receiptStorageId;
 
+  // Shared style for the small inline labels that appear above each
+  // input on mobile. Desktop hides these because the table header row
+  // provides the column context.
+  const mobileLabelCls =
+    "md:hidden text-[10px] font-medium uppercase tracking-wide text-muted-foreground";
+
   return (
     <div className="rounded-md border border-border overflow-hidden">
       <div className="hidden md:grid grid-cols-[minmax(0,1fr)_140px_80px_120px_110px_36px] gap-2 px-3 py-2 bg-muted/40 text-[11px] font-medium uppercase tracking-wide text-muted-foreground border-b border-border">
@@ -147,6 +153,7 @@ export function LineItemsSection({
               className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_140px_80px_120px_110px_36px] gap-2 p-3 items-start"
             >
               <div className="space-y-1">
+                <span className={mobileLabelCls}>Description</span>
                 <Input
                   placeholder="What was this line for?"
                   value={line.description}
@@ -166,6 +173,7 @@ export function LineItemsSection({
                 )}
               </div>
               <div className="space-y-1">
+                <span className={mobileLabelCls}>Category</span>
                 <Select
                   value={line.category}
                   onChange={(v) =>
@@ -180,6 +188,7 @@ export function LineItemsSection({
                 )}
               </div>
               <div className="space-y-1">
+                <span className={mobileLabelCls}>Quantity</span>
                 <Input
                   type="number"
                   min="0.01"
@@ -203,6 +212,7 @@ export function LineItemsSection({
                 )}
               </div>
               <div className="space-y-1">
+                <span className={mobileLabelCls}>Unit price</span>
                 <div className="relative">
                   <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                     {CURRENCY_SYMBOL[currency] || ""}
@@ -234,8 +244,13 @@ export function LineItemsSection({
                   </div>
                 )}
               </div>
-              <div className="font-mono tabular-nums text-right text-sm h-9 flex items-center justify-end px-2 text-foreground">
-                {formatMoney(lineTotal(line), currency)}
+              {/* Line total: labeled "Line total" on mobile, plain
+                  right-aligned number on desktop (column header covers it). */}
+              <div className="flex items-center justify-between md:justify-end gap-2 md:px-2 md:h-9 text-sm md:text-foreground">
+                <span className={mobileLabelCls}>Line total</span>
+                <span className="font-mono tabular-nums text-foreground">
+                  {formatMoney(lineTotal(line), currency)}
+                </span>
               </div>
               <div className="flex items-center justify-center md:pt-0 pt-1">
                 <Button
