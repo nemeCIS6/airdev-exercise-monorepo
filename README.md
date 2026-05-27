@@ -59,30 +59,31 @@ The seed creates five expenses — one in each of the five lifecycle states — 
 
 ## State machine
 
-The expense lifecycle:
+The expense lifecycle, rendered live by GitHub:
 
-```
-                    ┌─────────┐
-                    │  draft  │ ◄────────────────────────────────┐
-                    └────┬────┘                                  │
-                         │ submit                                │
-                         ▼                                       │
-                ┌──────────────────┐  reject       ┌──────────────────────────┐
-                │ pending_manager  │ ─────────────►│ rejected (by manager)    │
-                └────────┬─────────┘                └──────────────────────────┘
-                         │ approve                              ▲
-                         ▼                                      │  edit + resubmit
-                ┌──────────────────┐  reject       ┌──────────────────────────┐
-                │ pending_finance  │ ─────────────►│ rejected (by finance)    │
-                └────────┬─────────┘                └──────────────────────────┘
-                         │ approve
-                         ▼
-                    ┌──────────┐
-                    │ approved │  (terminal — immutable)
-                    └──────────┘
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Draft: create
+    Draft --> PendingManager: submit
+    PendingManager --> PendingFinance: manager approves
+    PendingFinance --> Approved: finance approves
 
-      withdraw: pending_manager / pending_finance → draft (preserves submittedAt)
-      resubmit: rejected → pending_manager (restarts the chain)
+    PendingManager --> RejectedByManager: manager rejects
+    PendingFinance --> RejectedByFinance: finance rejects
+
+    RejectedByManager --> PendingManager: edit + resubmit
+    RejectedByFinance --> PendingManager: edit + resubmit
+
+    PendingManager --> Draft: withdraw
+    PendingFinance --> Draft: withdraw (undoes manager approval)
+
+    Approved --> [*]: terminal · immutable
+
+    note right of Draft
+        submittedAt is set on first submit
+        and preserved across withdraw/resubmit
+    end note
 ```
 
 ---
@@ -155,33 +156,30 @@ npx convex env set GEMINI_API_KEY <your-key>
 
 ## How it works
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Next.js App Router (apps/web/app)                          │
-│  ─────────────────────────────────────                      │
-│  • (employee)/expenses     • (manager)/review · /team       │
-│  • (finance)/finance/...   • sign-in · sign-up · onboarding │
-│                                                             │
-│  RoleGuard redirects based on getMyProfile().role           │
-└────────────────────────┬────────────────────────────────────┘
-                         │ useQuery / useMutation / useAction
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Convex backend (apps/web/convex)                           │
-│  ───────────────────────────                                │
-│  schema.ts         userProfiles · expenses · expense_lines  │
-│                    · expense_events                         │
-│  expenses.ts       lifecycle mutations + role-scoped lists  │
-│  events.ts         audit timeline reads                     │
-│  files.ts          receipt upload / download URLs           │
-│  ai.ts             Gemini OCR (Node action)                 │
-│  users.ts          profile + team management                │
-│  seed.ts           idempotent seed (3 users + 5 expenses)   │
-│  lib/auth.ts       getCallerProfile, assertRole, ...        │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph FE["Next.js App Router"]
+        Employee["Employee routes<br/>list · new · detail"]
+        Manager["Manager routes<br/>review · team"]
+        Finance["Finance routes<br/>review · overview"]
+    end
+
+    subgraph BE["Convex backend"]
+        direction TB
+        Functions["Queries · Mutations · Actions<br/>(role-gated server-side)"]
+        DB[("Database<br/>userProfiles · expenses<br/>expense_lines · expense_events")]
+        Storage[("File storage<br/>receipts")]
+        Functions --- DB
+        Functions --- Storage
+    end
+
+    Gemini[("Google Gemini<br/>Vision · 2.5 Flash Lite")]
+
+    FE <==>|"useQuery · useMutation · useAction"| Functions
+    Functions -.->|"HTTPS<br/>(OCR action only)"| Gemini
 ```
 
-Every Convex function checks the caller's identity and role before touching data. Mutations diff and write events atomically — line edits in a single save share a `saveGroupId` so the timeline can group them visually.
+Every Convex function checks the caller's identity and role before touching data. Mutations diff and write events atomically — line edits in a single save share a `saveGroupId` so the timeline can group them visually. The Gemini OCR action is the only outbound network call from the backend.
 
 ---
 
