@@ -145,6 +145,13 @@ export default function EmployeeExpenseDetailPage({
     setSubmitting(true);
     try {
       await withdrawExpense({ expenseId: expense._id });
+      // Withdraw transitions the expense back to "draft"; the user
+      // almost certainly wants to keep editing, so re-enter edit mode.
+      // The seeding effect won't re-run (same expense._id), so we have
+      // to flip this flag explicitly.
+      setEditing(true);
+      setErrs({});
+      setLineErrs({});
       toast.info("Expense withdrawn to Draft.");
     } catch (err) {
       const msg =

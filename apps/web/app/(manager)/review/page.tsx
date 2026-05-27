@@ -16,8 +16,10 @@ import { dayStringToTs } from "@/lib/format";
 
 export default function ManagerReviewPage() {
   const router = useRouter();
+  // Default scope: items awaiting the manager's action. Clearing the
+  // filter widens to the manager's full direct-report history.
   const [filters, setFilters] = useState<FilterState>({
-    statuses: [],
+    statuses: ["pending_manager"],
     from: "",
     to: "",
   });
@@ -25,11 +27,21 @@ export default function ManagerReviewPage() {
   const dateFrom = dayStringToTs(filters.from, false);
   const dateTo = dayStringToTs(filters.to, true);
   const expenses = useQuery(api.expenses.listExpensesForReview, {
+    statuses: filters.statuses.length ? filters.statuses : undefined,
     dateFrom,
     dateTo,
   });
 
   const goDetail = (id: string) => router.push(`/review/${id}`);
+
+  const pendingCount = (expenses ?? []).filter(
+    (e) => e.status === "pending_manager",
+  ).length;
+  const isDefaultFilter =
+    filters.statuses.length === 1 &&
+    filters.statuses[0] === "pending_manager" &&
+    !filters.from &&
+    !filters.to;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
@@ -41,11 +53,9 @@ export default function ManagerReviewPage() {
             reports.
           </p>
         </div>
-        {expenses && expenses.length > 0 && (
+        {pendingCount > 0 && (
           <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">
-              {expenses.length}
-            </span>{" "}
+            <span className="font-medium text-foreground">{pendingCount}</span>{" "}
             awaiting your review
           </div>
         )}
@@ -55,14 +65,20 @@ export default function ManagerReviewPage() {
         <ExpenseFilters
           filters={filters}
           onChange={setFilters}
-          hideStatusFilter
+          statusDefault={["pending_manager"]}
         />
       </div>
 
       {expenses === undefined ? (
         <TableSkeleton rows={5} cols={7} />
       ) : expenses.length === 0 ? (
-        filters.from || filters.to ? (
+        isDefaultFilter ? (
+          <EmptyState
+            icon={CheckCheck}
+            title="Nothing to review"
+            body="When your direct reports submit expenses, they'll show up here."
+          />
+        ) : (
           <EmptyState
             icon={Filter}
             title="No expenses match these filters"
@@ -71,18 +87,16 @@ export default function ManagerReviewPage() {
               <Button
                 variant="outline"
                 onClick={() =>
-                  setFilters({ statuses: [], from: "", to: "" })
+                  setFilters({
+                    statuses: ["pending_manager"],
+                    from: "",
+                    to: "",
+                  })
                 }
               >
-                Clear filters
+                Reset to pending
               </Button>
             }
-          />
-        ) : (
-          <EmptyState
-            icon={CheckCheck}
-            title="Nothing to review"
-            body="When your direct reports submit expenses, they'll show up here."
           />
         )
       ) : (

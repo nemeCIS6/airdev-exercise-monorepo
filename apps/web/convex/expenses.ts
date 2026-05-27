@@ -348,24 +348,52 @@ export const listExpensesForReview = query({
 
     let candidates: Doc<"expenses">[];
     if (profile.role === "manager") {
+      // Managers see every submitted expense from their direct reports —
+      // not just the pending queue, but their full history (approved,
+      // rejected at any step, in flight at finance). Drafts stay private
+      // to the employee and are intentionally excluded.
       const directReports = await ctx.db
         .query("userProfiles")
         .withIndex("by_managerId", (q) => q.eq("managerId", callerId))
         .collect();
       const reportIds = new Set(directReports.map((r) => r.userId));
-      const pending = await ctx.db
-        .query("expenses")
-        .withIndex("by_status", (q) => q.eq("status", "pending_manager"))
-        .collect();
-      candidates = pending.filter((e) => reportIds.has(e.employeeId));
-      candidates.sort((a, b) => (a.submittedAt ?? 0) - (b.submittedAt ?? 0));
+
+      const perReport = await Promise.all(
+        Array.from(reportIds).map((rid) =>
+          ctx.db
+            .query("expenses")
+            .withIndex("by_employee", (q) => q.eq("employeeId", rid))
+            .collect(),
+        ),
+      );
+      candidates = perReport
+        .flat()
+        .filter((e) => e.status !== "draft")
+        .sort((a, b) => (b.submittedAt ?? 0) - (a.submittedAt ?? 0));
     } else {
-      candidates = await ctx.db
+      // Finance sees everything that has reached their step — currently
+      // queued (pending_finance), already approved by them, or rejected
+      // by them. Manager rejections never hit finance and are excluded.
+      const pendingFinance = await ctx.db
         .query("expenses")
         .withIndex("by_status", (q) => q.eq("status", "pending_finance"))
         .collect();
-      candidates.sort(
-        (a, b) => (a.managerDecidedAt ?? 0) - (b.managerDecidedAt ?? 0),
+      const approved = await ctx.db
+        .query("expenses")
+        .withIndex("by_status", (q) => q.eq("status", "approved"))
+        .collect();
+      const rejected = await ctx.db
+        .query("expenses")
+        .withIndex("by_status", (q) => q.eq("status", "rejected"))
+        .collect();
+      candidates = [
+        ...pendingFinance,
+        ...approved,
+        ...rejected.filter((e) => e.rejectedByRole === "finance"),
+      ].sort(
+        (a, b) =>
+          (b.managerDecidedAt ?? b.submittedAt ?? 0) -
+          (a.managerDecidedAt ?? a.submittedAt ?? 0),
       );
     }
 

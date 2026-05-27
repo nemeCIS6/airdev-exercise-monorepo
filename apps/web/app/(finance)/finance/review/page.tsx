@@ -16,8 +16,10 @@ import { dayStringToTs } from "@/lib/format";
 
 export default function FinanceReviewPage() {
   const router = useRouter();
+  // Default scope: items awaiting finance sign-off. Clearing the filter
+  // widens to the broader finance history (approved + rejected at finance).
   const [filters, setFilters] = useState<FilterState>({
-    statuses: [],
+    statuses: ["pending_finance"],
     from: "",
     to: "",
   });
@@ -25,11 +27,21 @@ export default function FinanceReviewPage() {
   const dateFrom = dayStringToTs(filters.from, false);
   const dateTo = dayStringToTs(filters.to, true);
   const expenses = useQuery(api.expenses.listExpensesForReview, {
+    statuses: filters.statuses.length ? filters.statuses : undefined,
     dateFrom,
     dateTo,
   });
 
   const goDetail = (id: string) => router.push(`/finance/review/${id}`);
+
+  const pendingCount = (expenses ?? []).filter(
+    (e) => e.status === "pending_finance",
+  ).length;
+  const isDefaultFilter =
+    filters.statuses.length === 1 &&
+    filters.statuses[0] === "pending_finance" &&
+    !filters.from &&
+    !filters.to;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
@@ -41,11 +53,9 @@ export default function FinanceReviewPage() {
             a manager.
           </p>
         </div>
-        {expenses && expenses.length > 0 && (
+        {pendingCount > 0 && (
           <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">
-              {expenses.length}
-            </span>{" "}
+            <span className="font-medium text-foreground">{pendingCount}</span>{" "}
             awaiting your review
           </div>
         )}
@@ -55,14 +65,20 @@ export default function FinanceReviewPage() {
         <ExpenseFilters
           filters={filters}
           onChange={setFilters}
-          hideStatusFilter
+          statusDefault={["pending_finance"]}
         />
       </div>
 
       {expenses === undefined ? (
         <TableSkeleton rows={5} cols={7} />
       ) : expenses.length === 0 ? (
-        filters.from || filters.to ? (
+        isDefaultFilter ? (
+          <EmptyState
+            icon={CheckCheck}
+            title="Inbox zero"
+            body="No expenses are awaiting finance sign-off. New submissions appear here after a manager approves them."
+          />
+        ) : (
           <EmptyState
             icon={Filter}
             title="No expenses match these filters"
@@ -71,18 +87,16 @@ export default function FinanceReviewPage() {
               <Button
                 variant="outline"
                 onClick={() =>
-                  setFilters({ statuses: [], from: "", to: "" })
+                  setFilters({
+                    statuses: ["pending_finance"],
+                    from: "",
+                    to: "",
+                  })
                 }
               >
-                Clear filters
+                Reset to pending
               </Button>
             }
-          />
-        ) : (
-          <EmptyState
-            icon={CheckCheck}
-            title="Inbox zero"
-            body="No expenses are awaiting finance sign-off. New submissions appear here after a manager approves them."
           />
         )
       ) : (
