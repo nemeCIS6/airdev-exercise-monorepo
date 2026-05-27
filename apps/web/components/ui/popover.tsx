@@ -9,6 +9,8 @@ interface PopoverProps {
     | React.ReactNode
     | ((props: { close: () => void }) => React.ReactNode);
   align?: "start" | "end";
+  /** Which side of the trigger to open. Defaults to "bottom". */
+  side?: "bottom" | "top";
   className?: string;
 }
 
@@ -16,6 +18,7 @@ export function Popover({
   trigger,
   children,
   align = "start",
+  side = "bottom",
   className,
 }: PopoverProps) {
   const [open, setOpen] = useState(false);
@@ -38,7 +41,8 @@ export function Popover({
       {open && (
         <div
           className={cn(
-            "absolute z-40 mt-1 min-w-[14rem] rounded-md border border-border bg-popover p-3 text-popover-foreground shadow-md",
+            "absolute z-40 min-w-[14rem] rounded-md border border-border bg-popover p-3 text-popover-foreground shadow-md",
+            side === "top" ? "bottom-full mb-1" : "mt-1",
             align === "end" ? "right-0" : "left-0",
             className,
           )}
