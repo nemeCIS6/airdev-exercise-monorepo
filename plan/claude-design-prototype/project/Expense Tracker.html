@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Expense Tracker</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          border: 'hsl(240 5.9% 90%)',
+          input: 'hsl(240 5.9% 90%)',
+          ring: 'hsl(240 5% 64.9%)',
+          background: 'hsl(0 0% 100%)',
+          foreground: 'hsl(240 10% 3.9%)',
+          primary: { DEFAULT: 'hsl(240 5.9% 10%)', foreground: 'hsl(0 0% 98%)' },
+          secondary: { DEFAULT: 'hsl(240 4.8% 95.9%)', foreground: 'hsl(240 5.9% 10%)' },
+          muted: { DEFAULT: 'hsl(240 4.8% 95.9%)', foreground: 'hsl(240 3.8% 46.1%)' },
+          accent: { DEFAULT: 'hsl(240 4.8% 95.9%)', foreground: 'hsl(240 5.9% 10%)' },
+          destructive: { DEFAULT: 'hsl(0 84.2% 60.2%)', foreground: 'hsl(0 0% 98%)' },
+          card: { DEFAULT: 'hsl(0 0% 100%)', foreground: 'hsl(240 10% 3.9%)' },
+          popover: { DEFAULT: 'hsl(0 0% 100%)', foreground: 'hsl(240 10% 3.9%)' },
+        },
+        borderRadius: {
+          lg: '0.5rem',
+          md: '0.375rem',
+          sm: '0.25rem',
+        },
+        fontFamily: {
+          sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+        },
+      },
+    },
+  };
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body, #root { height: 100%; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: hsl(240 10% 3.9%); background: hsl(0 0% 100%); -webkit-font-smoothing: antialiased; }
+  /* dialog backdrop blur */
+  .dlg-overlay { animation: dlg-fade .12s ease-out; }
+  @keyframes dlg-fade { from { opacity: 0; } to { opacity: 1; } }
+  .dlg-panel { animation: dlg-pop .14s cubic-bezier(.16,.84,.44,1); }
+  @keyframes dlg-pop { from { opacity: 0; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: none; } }
+  .pop { animation: dlg-pop .12s ease-out; }
+  /* skeleton */
+  .skel { background: linear-gradient(90deg, hsl(240 4.8% 95.9%) 0%, hsl(240 4.8% 92%) 50%, hsl(240 4.8% 95.9%) 100%); background-size: 200% 100%; animation: skel-shimmer 1.4s infinite linear; border-radius: 4px; }
+  @keyframes skel-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  /* focus ring */
+  .focus-ring:focus-visible { outline: 2px solid hsl(240 5% 64.9%); outline-offset: 2px; }
+  /* receipt placeholder stripes */
+  .receipt-stripes {
+    background-image: repeating-linear-gradient(135deg, hsl(240 4.8% 97%) 0 12px, hsl(240 4.8% 94%) 12px 24px);
+  }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="src/ui.jsx"></script>
+<script type="text/babel" src="src/store.jsx"></script>
+<script type="text/babel" src="src/auth.jsx"></script>
+<script type="text/babel" src="src/employee.jsx"></script>
+<script type="text/babel" src="src/manager.jsx"></script>
+<script type="text/babel" src="src/detail.jsx"></script>
+<script type="text/babel" src="src/app.jsx"></script>
+<script type="text/babel">
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
+</body>
+</html>

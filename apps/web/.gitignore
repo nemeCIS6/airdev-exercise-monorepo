@@ -1,0 +1,15 @@
+node_modules/
+.env.local
+.env*.local
+.next/
+next-env.d.ts
+out/
+build/
+dist/
+*.tsbuildinfo
+.DS_Store
+
+# Note: convex/_generated/ is intentionally committed so Vercel builds
+# (which don't run `npx convex dev`) can resolve `@/convex/_generated/api`.
+# Convex regenerates these files on every `convex dev` / `convex deploy`,
+# so they stay in sync with convex/*.ts.

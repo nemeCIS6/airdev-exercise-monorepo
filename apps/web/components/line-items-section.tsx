@@ -1,0 +1,319 @@
+"use client";
+
+import { useState } from "react";
+import { Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
+import { useAction } from "convex/react";
+import { toast } from "sonner";
+import { ConvexError } from "convex/values";
+import { api } from "@/convex/_generated/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import {
+  CATEGORIES,
+  CURRENCY_SYMBOL,
+  formatMoney,
+  lineTotal,
+  type Category,
+  type Currency,
+} from "@/lib/format";
+import type { Id } from "@/convex/_generated/dataModel";
+
+export interface LineLocal {
+  clientId: string;
+  _id?: Id<"expense_lines">;
+  description: string;
+  category: Category;
+  quantity: number;
+  unitAmount: number;
+}
+
+export interface LineErrors {
+  description?: string;
+  category?: string;
+  quantity?: string;
+  unitAmount?: string;
+}
+
+interface LineItemsSectionProps {
+  lines: LineLocal[];
+  currency: Currency;
+  onChange: (next: LineLocal[]) => void;
+  errors?: Record<string, LineErrors>;
+  disabled?: boolean;
+  /**
+   * If set, surfaces an "Auto-fill from receipt" button that calls
+   * Gemini OCR on the receipt and appends extracted lines.
+   */
+  receiptStorageId?: Id<"_storage">;
+}
+
+export function makeLine(partial: Partial<LineLocal> = {}): LineLocal {
+  return {
+    clientId:
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2),
+    description: "",
+    category: "other",
+    quantity: 1,
+    unitAmount: 0,
+    ...partial,
+  };
+}
+
+export function LineItemsSection({
+  lines,
+  currency,
+  onChange,
+  errors = {},
+  disabled,
+  receiptStorageId,
+}: LineItemsSectionProps) {
+  const extract = useAction(api.ai.extractLinesFromReceipt);
+  const [extracting, setExtracting] = useState(false);
+
+  const updateLine = (clientId: string, patch: Partial<LineLocal>) =>
+    onChange(
+      lines.map((l) => (l.clientId === clientId ? { ...l, ...patch } : l)),
+    );
+
+  const addLine = () => onChange([...lines, makeLine()]);
+
+  const removeLine = (clientId: string) =>
+    onChange(lines.filter((l) => l.clientId !== clientId));
+
+  const handleAutofill = async () => {
+    if (!receiptStorageId || extracting) return;
+    setExtracting(true);
+    try {
+      const { lines: extracted } = await extract({
+        storageId: receiptStorageId,
+      });
+      if (extracted.length === 0) {
+        toast.info("Couldn't read any line items. Enter them manually.");
+        return;
+      }
+      const newLines = extracted.map((l) =>
+        makeLine({
+          description: l.description,
+          category: l.category,
+          quantity: l.quantity,
+          unitAmount: l.unitAmount,
+        }),
+      );
+      // If the user hasn't touched the starting row, replace it; otherwise append.
+      const onlyHasEmptyStarter =
+        lines.length === 1 &&
+        lines[0].description.trim() === "" &&
+        lines[0].unitAmount === 0;
+      onChange(onlyHasEmptyStarter ? newLines : [...lines, ...newLines]);
+      toast.success(
+        `Added ${newLines.length} ${newLines.length === 1 ? "line" : "lines"} from receipt.`,
+      );
+    } catch (err) {
+      const msg =
+        err instanceof ConvexError
+          ? String(err.data)
+          : "Receipt OCR failed. Enter line items manually.";
+      toast.error(msg);
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  const grandTotal = lines.reduce((s, l) => s + lineTotal(l), 0);
+  const canRemove = lines.length > 1;
+  const canAutofill = !disabled && !!receiptStorageId;
+
+  // Shared style for the small inline labels that appear above each
+  // input on mobile. Desktop hides these because the table header row
+  // provides the column context.
+  const mobileLabelCls =
+    "md:hidden text-[10px] font-medium uppercase tracking-wide text-muted-foreground";
+
+  return (
+    <div className="rounded-md border border-border overflow-hidden">
+      <div className="hidden md:grid grid-cols-[minmax(0,1fr)_140px_80px_120px_110px_36px] gap-2 px-3 py-2 bg-muted/40 text-[11px] font-medium uppercase tracking-wide text-muted-foreground border-b border-border">
+        <div>Description</div>
+        <div>Category</div>
+        <div className="text-right">Qty</div>
+        <div className="text-right">Unit</div>
+        <div className="text-right">Total</div>
+        <div></div>
+      </div>
+
+      <div className="divide-y divide-border">
+        {lines.map((line) => {
+          const err = errors[line.clientId] ?? {};
+          return (
+            <div
+              key={line.clientId}
+              className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_140px_80px_120px_110px_36px] gap-2 p-3 items-start"
+            >
+              <div className="space-y-1">
+                <span className={mobileLabelCls}>Description</span>
+                <Input
+                  placeholder="What was this line for?"
+                  value={line.description}
+                  onChange={(e) =>
+                    updateLine(line.clientId, { description: e.target.value })
+                  }
+                  disabled={disabled}
+                  className={cn(
+                    err.description &&
+                      "border-destructive focus-visible:ring-destructive",
+                  )}
+                />
+                {err.description && (
+                  <div className="text-xs text-destructive">
+                    {err.description}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-1">
+                <span className={mobileLabelCls}>Category</span>
+                <Select
+                  value={line.category}
+                  onChange={(v) =>
+                    updateLine(line.clientId, { category: v as Category })
+                  }
+                  options={CATEGORIES.map((c) => ({ value: c, label: c }))}
+                  placeholder="Category"
+                  disabled={disabled}
+                />
+                {err.category && (
+                  <div className="text-xs text-destructive">{err.category}</div>
+                )}
+              </div>
+              <div className="space-y-1">
+                <span className={mobileLabelCls}>Quantity</span>
+                <Input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={Number.isFinite(line.quantity) ? line.quantity : ""}
+                  onChange={(e) =>
+                    updateLine(line.clientId, {
+                      quantity: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  disabled={disabled}
+                  className={cn(
+                    "text-right tabular-nums",
+                    err.quantity &&
+                      "border-destructive focus-visible:ring-destructive",
+                  )}
+                />
+                {err.quantity && (
+                  <div className="text-xs text-destructive">{err.quantity}</div>
+                )}
+              </div>
+              <div className="space-y-1">
+                <span className={mobileLabelCls}>Unit price</span>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                    {CURRENCY_SYMBOL[currency] || ""}
+                  </span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={
+                      Number.isFinite(line.unitAmount) ? line.unitAmount : ""
+                    }
+                    onChange={(e) =>
+                      updateLine(line.clientId, {
+                        unitAmount: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    disabled={disabled}
+                    className={cn(
+                      "text-right tabular-nums pl-6",
+                      err.unitAmount &&
+                        "border-destructive focus-visible:ring-destructive",
+                    )}
+                  />
+                </div>
+                {err.unitAmount && (
+                  <div className="text-xs text-destructive">
+                    {err.unitAmount}
+                  </div>
+                )}
+              </div>
+              {/* Line total: labeled "Line total" on mobile, plain
+                  right-aligned number on desktop (column header covers it). */}
+              <div className="flex items-center justify-between md:justify-end gap-2 md:px-2 md:h-9 text-sm md:text-foreground">
+                <span className={mobileLabelCls}>Line total</span>
+                <span className="font-mono tabular-nums text-foreground">
+                  {formatMoney(lineTotal(line), currency)}
+                </span>
+              </div>
+              <div className="flex items-center justify-center md:pt-0 pt-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeLine(line.clientId)}
+                  disabled={disabled || !canRemove}
+                  className="text-muted-foreground hover:text-destructive disabled:opacity-30"
+                  title={canRemove ? "Remove line" : "At least one line is required"}
+                >
+                  <Trash2 size={14} />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer: on mobile, total row sits above the action buttons so
+          the running total is the prominent anchor; on sm+ they swap
+          to inline (buttons left, total right) — the canonical desktop
+          spreadsheet feel. */}
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between px-3 py-3 border-t border-border bg-muted/20">
+        <div className="flex items-center gap-1 flex-wrap">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={addLine}
+            disabled={disabled}
+            className="text-foreground"
+          >
+            <Plus size={14} /> Add line
+          </Button>
+          {canAutofill && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleAutofill}
+              disabled={extracting}
+              className="text-foreground"
+              title="Use Gemini Vision to extract line items from your receipt"
+            >
+              {extracting ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Sparkles size={14} />
+              )}{" "}
+              {extracting ? "Reading receipt…" : "Auto-fill from receipt"}
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            Total
+          </span>
+          <span className="text-xl font-semibold tabular-nums">
+            {formatMoney(grandTotal, currency)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
