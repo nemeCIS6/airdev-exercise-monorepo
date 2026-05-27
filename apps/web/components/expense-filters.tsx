@@ -152,27 +152,44 @@ interface StatusCountChipsProps {
   counts: Record<Status, number>;
 }
 
+const CHIP_STYLES: Record<Status, string> = {
+  draft: "border-border bg-secondary text-secondary-foreground",
+  pending_manager: "border-yellow-500/40 bg-yellow-50/60 text-yellow-800",
+  pending_finance: "border-blue-400/50 bg-blue-50 text-blue-800",
+  approved: "border-green-300 bg-green-100 text-green-800",
+  rejected: "border-destructive/30 bg-destructive/10 text-destructive",
+};
+
+const CHIP_LABEL: Record<Status, string> = {
+  draft: "Drafts",
+  pending_manager: "Pending Manager",
+  pending_finance: "Pending Finance",
+  approved: "Approved",
+  rejected: "Rejected",
+};
+
 export function StatusCountChips({ counts }: StatusCountChipsProps) {
-  const items: { key: Status; label: string }[] = [
-    { key: "draft", label: "Drafts" },
-    { key: "pending_manager", label: "Pending Manager" },
-    { key: "pending_finance", label: "Pending Finance" },
-    { key: "approved", label: "Approved" },
-    { key: "rejected", label: "Rejected" },
+  const order: Status[] = [
+    "draft",
+    "pending_manager",
+    "pending_finance",
+    "approved",
+    "rejected",
   ];
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-      {items.map((it, i) => (
-        <span key={it.key} className="flex items-center gap-x-4">
-          {i > 0 && <span className="text-muted-foreground/40">·</span>}
-          <span className="text-muted-foreground">
-            {it.label}:{" "}
-            <span className="font-medium text-foreground tabular-nums">
-              {counts[it.key]}
-            </span>
+    <div className="flex flex-wrap items-center gap-2 text-sm">
+      {order.map((s) => {
+        const n = counts[s];
+        return (
+          <span
+            key={s}
+            className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium ${CHIP_STYLES[s]} ${n === 0 ? "opacity-50" : ""}`}
+          >
+            {CHIP_LABEL[s]}
+            <span className="font-semibold tabular-nums">{n}</span>
           </span>
-        </span>
-      ))}
+        );
+      })}
     </div>
   );
 }
